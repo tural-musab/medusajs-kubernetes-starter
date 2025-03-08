@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  medusa:
+    image: medusa-store:latest
+    container_name: medusa_standalone
+    env_file: .env.docker
+    ports:
+      - "9000:9000"
+  db:
+    image: postgres:16
+    container_name: medusa_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: medusa-store
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Healthcheck to verify database is ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - medusa-network
+
+  redis:
+    image: redis:7
+    container_name: medusa_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - medusa-network
+
+volumes:
+  postgres_data:
+    name: postgres_medusa_db
+networks:
+  medusa-network:
+    external: true
