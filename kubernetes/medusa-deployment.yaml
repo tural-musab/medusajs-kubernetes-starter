@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medusa-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medusa
+  template:
+    metadata:
+      labels:
+        app: medusa
+    spec:
+      initContainers:
+        - name: migrate-db
+          image: medusa-store:latest
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "yarn medusa db:migrate"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: REDIS_URL
+        - name: create-admin-user
+          image: medusa-store:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            [
+              "sh",
+              "-c",
+              "yarn medusa user -e admin@medusajs.com -p supersecret || true",
+            ]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: REDIS_URL
+      containers:
+        - name: medusa-container
+          image: medusa-store:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: JWT_SECRET
+            - name: COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: COOKIE_SECRET
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: medusa-secret
+                  key: REDIS_URL
+          envFrom:
+            - configMapRef:
+                name: medusa-config
