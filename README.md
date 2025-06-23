@@ -1,6 +1,6 @@
 # Medusa in Kubernetes
 
-This project is demonstration for my blogpost. It should be also used as a starter kit to use Medusa with K8s.
+This project is a Kubernetes starter kit for deploying MedusaJS e-commerce applications. Forked and customized by tural-musab.
 
 ## Prerequisites
 
